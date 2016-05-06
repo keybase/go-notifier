@@ -32,7 +32,7 @@ func (n windowsNotifier) DeliverNotification(notification Notification) error {
 	// For testing
 	// toastPath := filepath.Join(os.Getenv("GOPATH"), "src/github.com/keybase/go-osnotify/toaster/toast.exe")
 
-	cmd := exec.Command(notification.toastPath, args...)
+	cmd := exec.Command(notification.ToastPath, args...)
 	if cmd == nil {
 		return fmt.Errorf("No command")
 	}
