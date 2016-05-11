@@ -8,9 +8,9 @@ type Notification struct {
 	Title     string
 	Message   string
 	ImagePath string
-	ImageURL  string
-	BundleID  string // For darwin
-	ToastPath string // For windows (Toaster)
+	BundleID  string   // For darwin
+	Actions   []string // For darwin
+	ToastPath string   // For windows (Toaster)
 }
 
 // Notifier knows how to deliver a notification

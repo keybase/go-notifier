@@ -13,33 +13,24 @@ import (
 	pkg "github.com/keybase/go-notifier"
 )
 
-var (
-	title     = kingpin.Flag("title", "Title").String()
-	message   = kingpin.Flag("message", "Message").String()
-	imagePath = kingpin.Flag("image-path", "Image path").String()
-	bundleID  = kingpin.Flag("bundle-id", "Bundle identifier (for OS X)").String()
-	toastPath = kingpin.Flag("toast-path", "Path to toast.exe (for Windows)").String()
-)
-
 func main() {
-	kingpin.Version("0.1.1")
+	notification := pkg.Notification{}
+	kingpin.Flag("title", "Title").StringVar(&notification.Title)
+	kingpin.Flag("message", "Message").StringVar(&notification.Message)
+	kingpin.Flag("image-path", "Image path").StringVar(&notification.ImagePath)
+	kingpin.Flag("action", "Actions (for OS X)").StringsVar(&notification.Actions)
+	kingpin.Flag("bundle-id", "Bundle identifier (for OS X)").StringVar(&notification.BundleID)
+	kingpin.Flag("toast-path", "Path to toast.exe (for Windows)").StringVar(&notification.ToastPath)
+	kingpin.Version("0.1.2")
 	kingpin.Parse()
 
-	if runtime.GOOS == "windows" && *toastPath == "" {
+	if runtime.GOOS == "windows" && notification.ToastPath == "" {
 		log.Fatal(fmt.Errorf("Need to specify --toast-path for Windows"))
 	}
 
 	notifier, err := pkg.NewNotifier()
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	notification := pkg.Notification{
-		Title:     *title,
-		Message:   *message,
-		ImagePath: *imagePath,
-		BundleID:  *bundleID,
-		ToastPath: *toastPath,
 	}
 
 	if err := notifier.DeliverNotification(notification); err != nil {

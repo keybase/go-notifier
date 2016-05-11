@@ -29,43 +29,40 @@ static BOOL installFakeBundleIdentifierHook() {
 @interface NotificationDelegate : NSObject <NSUserNotificationCenterDelegate>
 @end
 
-CFStringRef deliverNotification(CFStringRef title, CFStringRef subtitle, CFStringRef message, CFStringRef appIconURLString,
-  CFStringRef bundleID, CFStringRef groupID,
-  CFStringRef actionButtonTitle, CFStringRef otherButtonTitle) {
+CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, CFStringRef messageRef, CFStringRef appIconURLStringRef,
+  CFArrayRef actionsRef, CFStringRef bundleIDRef, CFStringRef groupIDRef) {
 
-  if (bundleID) {
-    _fakeBundleIdentifier = (NSString *)bundleID;
+  if (bundleIDRef) {
+    _fakeBundleIdentifier = (NSString *)bundleIDRef;
   }
   installFakeBundleIdentifierHook();
 
-  NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-  [defaults registerDefaults:@{@"sender": @"com.apple.Terminal"}];
-
   NSUserNotification *userNotification = [[NSUserNotification alloc] init];
-  userNotification.title = (NSString *)title;
-  userNotification.subtitle = (NSString *)subtitle;
-  userNotification.informativeText = (NSString *)message;
+  userNotification.title = (NSString *)titleRef;
+  userNotification.subtitle = (NSString *)subtitleRef;
+  userNotification.informativeText = (NSString *)messageRef;
   NSMutableDictionary *options = [NSMutableDictionary dictionary];
-  if (groupID) {
-    options[@"groupID"] = (NSString *)groupID;
+  if (groupIDRef) {
+    options[@"groupID"] = (NSString *)groupIDRef;
   }
   NSString *uuid = [[NSUUID UUID] UUIDString];
   options[@"uuid"] = uuid;
   userNotification.userInfo = options;
-  if (appIconURLString) {
-    NSURL *appIconURL = [NSURL URLWithString:(NSString *)appIconURLString];
+  if (appIconURLStringRef) {
+    NSURL *appIconURL = [NSURL URLWithString:(NSString *)appIconURLStringRef];
     NSImage *image = [[NSImage alloc] initWithContentsOfURL:appIconURL];
     if (image) {
       [userNotification setValue:image forKey:@"_identityImage"];
       [userNotification setValue:@(false) forKey:@"_identityImageHasBorder"];
     }
   }
-
-  if (actionButtonTitle) {
-    userNotification.actionButtonTitle = (NSString *)actionButtonTitle;
+  NSArray *actions = (NSArray *)actionsRef;
+  if ([actions count] >= 1) {
+    userNotification.actionButtonTitle = [actions objectAtIndex:0];
+    [userNotification setValue:@YES forKey:@"_showsButtons"];
   }
-  if (otherButtonTitle) {
-    userNotification.otherButtonTitle = (NSString *)otherButtonTitle;
+  if ([actions count] >= 2) {
+    userNotification.otherButtonTitle = [actions objectAtIndex:1];
   }
 
   NSUserNotificationCenter *userNotificationCenter = [NSUserNotificationCenter defaultUserNotificationCenter];
