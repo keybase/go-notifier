@@ -16,6 +16,11 @@ For Linux, we use [notify-send](http://man.cx/notify-send).
 go install github.com/keybase/go-notifier/notifier
 ```
 
+### Alerts
+
+If you need alert style (actionable) notifications (on OS X), you need to include an Info.plist
+in the binary and sign it. You can look at `build_darwin.sh` on how to do this.
+
 ### Resources
 
 Follows similar requirements of [node-notifier](https://github.com/mikaelbr/node-notifier),
@@ -26,3 +31,5 @@ this implementation uses cgo to talk directly to NSUserNotificationCenter APIs. 
 but a cgo implementation was preferable.
 
 The [0xAX/notificator](https://github.com/0xAX/notificator) only supports growlnotify on Windows and OS X.
+
+The [vjeantet/alerter](https://github.com/vjeantet/alerter) app allows you to use alert style notifications on OS X.

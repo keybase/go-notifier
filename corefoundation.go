@@ -148,6 +148,20 @@ func CFArrayToArray(cfArray C.CFArrayRef) (a []C.CFTypeRef) {
 	return
 }
 
+// StringsToCFArray converts strings to CFArrayRef
+func StringsToCFArray(strs []string) C.CFArrayRef {
+	strRefs := []C.CFTypeRef{}
+	for _, s := range strs {
+		strRef, err := StringToCFString(s)
+		if err != nil {
+			return nil
+		}
+		defer Release(C.CFTypeRef(strRef))
+		strRefs = append(strRefs, C.CFTypeRef(strRef))
+	}
+	return ArrayToCFArray(strRefs)
+}
+
 // Convertable knows how to convert an instance to a CFTypeRef.
 type Convertable interface {
 	Convert() (C.CFTypeRef, error)

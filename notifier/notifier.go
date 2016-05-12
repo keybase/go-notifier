@@ -18,9 +18,15 @@ func main() {
 	kingpin.Flag("title", "Title").StringVar(&notification.Title)
 	kingpin.Flag("message", "Message").StringVar(&notification.Message)
 	kingpin.Flag("image-path", "Image path").StringVar(&notification.ImagePath)
+
+	// OS X
 	kingpin.Flag("action", "Actions (for OS X)").StringsVar(&notification.Actions)
+	kingpin.Flag("timeout", "Timeout in seconds (for OS X)").Float64Var(&notification.Timeout)
 	kingpin.Flag("bundle-id", "Bundle identifier (for OS X)").StringVar(&notification.BundleID)
+
+	// Windows
 	kingpin.Flag("toast-path", "Path to toast.exe (for Windows)").StringVar(&notification.ToastPath)
+
 	kingpin.Version("0.1.2")
 	kingpin.Parse()
 
