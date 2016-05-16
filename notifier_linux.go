@@ -10,7 +10,7 @@ import (
 
 type linuxNotifier struct{}
 
-// NewNotifier constructs notifier for Windows
+// NewNotifier constructs notifier for Linux
 func NewNotifier() (Notifier, error) {
 	return &linuxNotifier{}, nil
 }
