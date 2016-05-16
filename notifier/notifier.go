@@ -21,7 +21,7 @@ func main() {
 
 	// OS X
 	kingpin.Flag("action", "Actions (for OS X)").StringsVar(&notification.Actions)
-	kingpin.Flag("timeout", "Timeout in seconds (for OS X)").Float64Var(&notification.Timeout)
+	kingpin.Flag("timeout", "Timeout in seconds (for OS X)").Default("5").Float64Var(&notification.Timeout)
 	kingpin.Flag("bundle-id", "Bundle identifier (for OS X)").StringVar(&notification.BundleID)
 
 	// Windows

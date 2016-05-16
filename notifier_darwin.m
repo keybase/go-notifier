@@ -33,7 +33,7 @@ static BOOL installFakeBundleIdentifierHook() {
 @end
 
 CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, CFStringRef messageRef, CFStringRef appIconURLStringRef,
-  CFArrayRef actionsRef, CFStringRef bundleIDRef, CFStringRef groupIDRef, NSTimeInterval timeout) {
+  CFArrayRef actionsRef, CFStringRef bundleIDRef, CFStringRef groupIDRef, NSTimeInterval timeout, bool debug) {
 
   if (bundleIDRef) {
     _fakeBundleIdentifier = (NSString *)bundleIDRef;
@@ -71,7 +71,7 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
   }
 
   NSUserNotificationCenter *userNotificationCenter = [NSUserNotificationCenter defaultUserNotificationCenter];
-  //NSLog(@"Deliver: %@", userNotification);
+  if (debug) NSLog(@"Deliver: %@", userNotification);
   NotificationDelegate *delegate = [[NotificationDelegate alloc] init];
   delegate.timeout = timeout;
   delegate.uuid = uuid;
