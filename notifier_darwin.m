@@ -100,10 +100,8 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
     });
 }
 
-- (NSString *)JSON:(NSDictionary *)dict {
-  NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
-  if (!jsonData) return @"";
-  return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+- (NSData *)JSONData:(NSDictionary *)dict {
+  return [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
 }
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didDeliverNotification:(NSUserNotification *)userNotification {
@@ -136,7 +134,7 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
       } else {
         action = userNotification.actionButtonTitle;
       }
-      NSLog(@"%@", [self JSON:@{@"action": action}]);
+      [[NSFileHandle fileHandleWithStandardOutput] writeData:[self JSONData:@{@"action": action}]];
       break;
     }
     case NSUserNotificationActivationTypeContentsClicked:
