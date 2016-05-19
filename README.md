@@ -21,6 +21,31 @@ go install github.com/keybase/go-notifier/notifier
 If you need alert style (actionable) notifications (on OS X), you need to include an Info.plist
 in the binary and sign it. You can look at `build_darwin.sh` on how to do this.
 
+### Examples (OS X)
+
+#### Notification with single action
+
+```
+notifier --title="Hi" --message="Test message" --bundle-id=keybase.Electron --timeout=20 --action=Close
+```
+
+If action is chosen, you get output (stdout):
+```
+{"type":"action","action":"Close"}
+```
+
+If the notification contents are clicked,
+```
+{"type":"clicked"}
+```
+
+#### Notification with multiple actions
+
+```
+notifier --title="Hi" --message="Test message" --bundle-id=keybase.Electron --timeout=20 --action=Close --action="Install" --action="Ignore"
+```
+
+
 ### Resources
 
 Follows similar requirements of [node-notifier](https://github.com/mikaelbr/node-notifier),
