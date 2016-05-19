@@ -60,14 +60,19 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
     }
   }
   NSArray *actions = (NSArray *)actionsRef;
-  if ([actions count] >= 1) {
+  if ([actions count] == 1) {
     [userNotification setValue:@YES forKey:@"_showsButtons"];
-    if ([actions count] >= 2) {
-      [userNotification setValue:@YES forKey:@"_alwaysShowAlternateActionMenu"];
-      [userNotification setValue:actions forKey:@"_alternateActionButtonTitles"];
-    } else {
-      userNotification.actionButtonTitle = [actions objectAtIndex:0];
-    }
+    userNotification.actionButtonTitle = [actions objectAtIndex:0];
+  } else if ([actions count] == 2) {
+    [userNotification setValue:@YES forKey:@"_showsButtons"];
+    userNotification.otherButtonTitle = [actions objectAtIndex:0];
+    userNotification.actionButtonTitle = [actions objectAtIndex:1];
+  } else if ([actions count] >= 3) {
+    userNotification.otherButtonTitle = [actions objectAtIndex:0];
+    NSArray *alternateActions = [actions subarrayWithRange:NSMakeRange(1, [actions count] - 1)];
+    [userNotification setValue:@YES forKey:@"_showsButtons"];
+    [userNotification setValue:@YES forKey:@"_alwaysShowAlternateActionMenu"];
+    [userNotification setValue:alternateActions forKey:@"_alternateActionButtonTitles"];
   }
 
   NSUserNotificationCenter *userNotificationCenter = [NSUserNotificationCenter defaultUserNotificationCenter];
@@ -89,10 +94,13 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
   return YES;
 }
 
-- (void)remove:(NSUserNotification *)userNotification center:(NSUserNotificationCenter *)center {
+- (void)remove:(NSUserNotification *)userNotification center:(NSUserNotificationCenter *)center fromActivation:(BOOL)fromActivation timedOut:(BOOL)timedOut {
   dispatch_async(dispatch_get_main_queue(), ^{
       [center removeDeliveredNotification:userNotification];
       dispatch_async(dispatch_get_main_queue(), ^{
+        if (!fromActivation && !timedOut) {
+          [self writeResponse:@{@"action": userNotification.otherButtonTitle, @"type": @"action"}];
+        }
         fflush(stdout);
         fflush(stderr);
         exit(0);
@@ -100,13 +108,18 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
     });
 }
 
-- (NSData *)JSONData:(NSDictionary *)dict {
-  return [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
+- (void)writeResponse:(NSDictionary *)dict {
+  NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
+  if (data) {
+    [[NSFileHandle fileHandleWithStandardOutput] writeData:data];
+    fflush(stdout);
+  }
 }
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didDeliverNotification:(NSUserNotification *)userNotification {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     NSDate *start = [NSDate date];
+    BOOL timedOut = YES;
     while (-[start timeIntervalSinceNow] < self.timeout) {
       bool found = NO;
       for (NSUserNotification *deliveredNotification in [[NSUserNotificationCenter defaultUserNotificationCenter] deliveredNotifications]) {
@@ -116,13 +129,18 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
           break;
         }
       }
-      if (!found) break;
+      if (!found) {
+        timedOut = NO;
+        break;
+      }
     }
-    [self remove:userNotification center:center];
+    [self remove:userNotification center:center fromActivation:NO timedOut:timedOut];
   });
 }
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didActivateNotification:(NSUserNotification *)userNotification {
+  // There is no easy way to determine if close button was clicked
+  // https://stackoverflow.com/questions/21110714/mac-os-x-nsusernotificationcenter-notification-get-dismiss-event-callback
   switch (userNotification.activationType) {
     case NSUserNotificationActivationTypeAdditionalActionClicked:
     case NSUserNotificationActivationTypeActionButtonClicked: {
@@ -134,20 +152,18 @@ CFStringRef deliverNotification(CFStringRef titleRef, CFStringRef subtitleRef, C
       } else {
         action = userNotification.actionButtonTitle;
       }
-      [[NSFileHandle fileHandleWithStandardOutput] writeData:[self JSONData:@{@"action": action}]];
+      [self writeResponse:@{@"action": action, @"type": @"action"}];
       break;
     }
     case NSUserNotificationActivationTypeContentsClicked:
-      //NSLog(@"contents");
+      [self writeResponse:@{@"type": @"clicked"}];
       break;
     case NSUserNotificationActivationTypeReplied:
-      //NSLog(@"replied");
       break;
     case NSUserNotificationActivationTypeNone:
-      //NSLog(@"none");
       break;
   }
-  [self remove:userNotification center:center];
+  [self remove:userNotification center:center fromActivation:YES timedOut:NO];
 }
 
 @end
